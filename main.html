@@ -79,7 +79,6 @@
       <label class="terms"><input id="agree" type="checkbox" required><span>I confirm the information is correct and agree to the <a href="#terms">Terms &amp; Conditions</a>.</span></label>
 
       <div class="crypto-badge"><b>🟡 BNB · 0.0001</b><span>BNB Smart Chain · Chain ID 56</span></div>
-      <button class="submit" id="submitBtn" type="submit">🟡 Pay 0.0001 BNB &amp; Enter</button>
 
       <div id="paymentBox" class="payment-box">
         <div class="pay-title">Payment details</div>
@@ -88,6 +87,7 @@
         <div class="mini"><button type="button" id="copyAddress">Copy address</button><button type="button" id="verifyBtn">Verify payment</button></div>
         <label for="txHash">Transaction hash (manual verification)</label>
         <input id="txHash" placeholder="0x…" maxlength="66" autocomplete="off">
+        <button class="submit" id="submitBtn" type="submit">🟡 Pay 0.0001 BNB &amp; Enter</button>
       </div>
       <div id="message" class="message" role="status" aria-live="polite"></div>
     </form>
@@ -146,7 +146,7 @@ const txStream=$("txStream");const demoAmounts=["0.0003 BNB","0.0011 BNB","0.002
 for(let i=0;i<9;i++)setTimeout(spawnTxBubble,i*500);setInterval(spawnTxBubble,1200);
 function msg(text,type=""){const m=$("message");m.textContent=text;m.className="message"+(type?" "+type:"")}
 async function updatePrizeUsd(){const fallback=725.54;try{const r=await fetch("https://api.coingecko.com/api/v3/simple/price?ids=binancecoin&vs_currencies=usd");if(!r.ok)throw new Error("price fetch failed");const d=await r.json();const price=Number(d?.binancecoin?.usd);if(!Number.isFinite(price)||price<=0)throw new Error("invalid price");$("prizeUsd").textContent=`≈ $${(price*0.1).toLocaleString("en-US",{minimumFractionDigits:2,maximumFractionDigits:2})} USD`;$("priceNote").textContent=`Based on 1 BNB ≈ $${price.toLocaleString("en-US",{minimumFractionDigits:2,maximumFractionDigits:2})}; updates periodically.`}catch{const price=fallback;$("prizeUsd").textContent=`≈ $${(price*0.1).toFixed(2)} USD`;$("priceNote").textContent="Approximate USD value; BNB price can change."}}
-async function getConfig(){try{const r=await fetch(API_BASE+"/api/config",{cache:"no-store"});const data=await r.json();if(data?.bnb?.recipient)$("bnbAddress").textContent=data.bnb.recipient;if(!r.ok||!data?.bnb?.configured){msg("BNB payment verification is not activated yet. The address is ready; complete the Cloudflare secret setup to enable payments.","error")}}catch{$("bnbAddress").textContent=BNB_RECIPIENT_FALLBACK;msg("BNB address loaded. Payment verification still needs Cloudflare activation.","error")}}
+async function getConfig(){try{const r=await fetch(API_BASE+"/api/config",{cache:"no-store"});const data=await r.json();if(data?.bnb?.recipient)$("bnbAddress").textContent=data.bnb.recipient}catch{$("bnbAddress").textContent=BNB_RECIPIENT_FALLBACK}}
 async function ensureBsc(){const eth=window.ethereum;if(!eth)throw new Error("No compatible wallet detected. Use MetaMask, Trust Wallet, or another browser wallet, or send BNB manually and paste the transaction hash.");const accounts=await eth.request({method:"eth_requestAccounts"});try{await eth.request({method:"wallet_switchEthereumChain",params:[{chainId:"0x38"}]})}catch(e){if(e.code===4902){await eth.request({method:"wallet_addEthereumChain",params:[{chainId:"0x38",chainName:"BNB Smart Chain",nativeCurrency:{name:"BNB",symbol:"BNB",decimals:18},rpcUrls:["https://bsc-dataseed.bnbchain.org"],blockExplorerUrls:["https://bscscan.com"]}]})}else throw e}return accounts[0]}
 async function createIntent(){const body={name:$("name").value.trim(),email:$("email").value.trim(),phone:$("phone").value.trim()};const r=await fetch(API_BASE+"/api/bnb-intent",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(body)});const data=await r.json();if(!r.ok)throw new Error(data.error||"Could not prepare BNB payment.");currentIntent=data.intent;$("bnbAddress").textContent=data.recipient;$("paymentBox").scrollIntoView({behavior:"smooth",block:"nearest"});return data}
 async function verifyBnb(txHash,walletAddress=""){const r=await fetch(API_BASE+"/api/bnb-verify",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({intent:currentIntent,txHash,walletAddress})});const data=await r.json();if(r.status===202)throw new Error(data.error||"Payment still pending.");if(!r.ok)throw new Error(data.error||"BNB verification failed.");return data}
