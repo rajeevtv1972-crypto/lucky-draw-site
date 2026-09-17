@@ -1,5 +1,8 @@
 wrangler.jsonc
 .assetsignore
 README.md
+worker.js
 .git/**
 .github/**
+.env*
+.dev.vars*
