@@ -35,25 +35,6 @@ function isValidTxHash(hash) {
   return /^0x[a-fA-F0-9]{64}$/.test(hash);
 }
 
-async function hmacHex(message, secret) {
-  const key = await crypto.subtle.importKey(
-    "raw",
-    new TextEncoder().encode(secret),
-    { name: "HMAC", hash: "SHA-256" },
-    false,
-    ["sign"]
-  );
-  const signature = await crypto.subtle.sign("HMAC", key, new TextEncoder().encode(message));
-  return [...new Uint8Array(signature)].map((b) => b.toString(16).padStart(2, "0")).join("");
-}
-
-function safeEqual(a, b) {
-  if (a.length !== b.length) return false;
-  let result = 0;
-  for (let i = 0; i < a.length; i++) result |= a.charCodeAt(i) ^ b.charCodeAt(i);
-  return result === 0;
-}
-
 function base64UrlEncode(text) {
   return btoa(unescape(encodeURIComponent(text)))
     .replaceAll("+", "-")
@@ -66,28 +47,20 @@ function base64UrlDecode(text) {
   return decodeURIComponent(escape(atob(padded)));
 }
 
-async function createBnbIntent(entry, env) {
-  if (!env.BNB_INTENT_SECRET) throw new Error("BNB_INTENT_SECRET is not configured.");
+function createBnbIntent(entry) {
   const payload = {
-    v: 1,
+    v: 2,
     exp: Date.now() + BNB_INTENT_TTL_MS,
+    nonce: crypto.randomUUID(),
     entry
   };
-  const encoded = base64UrlEncode(JSON.stringify(payload));
-  const signature = await hmacHex(encoded, env.BNB_INTENT_SECRET);
-  return `${encoded}.${signature}`;
+  return base64UrlEncode(JSON.stringify(payload));
 }
 
-async function verifyBnbIntent(token, env) {
-  if (!env.BNB_INTENT_SECRET || !token || !token.includes(".")) return null;
-  const separator = token.lastIndexOf(".");
-  const encoded = token.slice(0, separator);
-  const signature = token.slice(separator + 1);
-  const expected = await hmacHex(encoded, env.BNB_INTENT_SECRET);
-  if (!safeEqual(expected, signature)) return null;
-
+function verifyBnbIntent(token) {
+  if (!token) return null;
   try {
-    const payload = JSON.parse(base64UrlDecode(encoded));
+    const payload = JSON.parse(base64UrlDecode(token));
     if (!payload?.exp || Date.now() > payload.exp) return null;
     const entry = payload.entry || {};
     if (!entry.name || !isValidEmail(entry.email)) return null;
@@ -176,7 +149,7 @@ export default {
     if (url.pathname === "/api/config" && request.method === "GET") {
       return responseJson({
         bnb: {
-          configured: Boolean(env.BNB_INTENT_SECRET),
+          configured: true,
           amountBnb: "0.0001",
           amountWei: BNB_AMOUNT_WEI.toString(),
           recipient: BNB_RECIPIENT,
@@ -186,10 +159,6 @@ export default {
     }
 
     if (url.pathname === "/api/bnb-intent" && request.method === "POST") {
-      if (!env.BNB_INTENT_SECRET) {
-        return responseJson({ error: "BNB payment is not configured yet." }, 503, request);
-      }
-
       let body;
       try { body = await request.json(); } catch { return responseJson({ error: "Invalid JSON request." }, 400, request); }
 
@@ -201,7 +170,7 @@ export default {
       }
 
       const entry = { name, email, phone: phone || "Not provided", submittedAt: new Date().toISOString() };
-      const intent = await createBnbIntent(entry, env);
+      const intent = createBnbIntent(entry);
       return responseJson({
         intent,
         recipient: BNB_RECIPIENT,
@@ -213,10 +182,6 @@ export default {
     }
 
     if (url.pathname === "/api/bnb-verify" && request.method === "POST") {
-      if (!env.BNB_INTENT_SECRET) {
-        return responseJson({ error: "BNB payment is not configured yet." }, 503, request);
-      }
-
       let body;
       try { body = await request.json(); } catch { return responseJson({ error: "Invalid JSON request." }, 400, request); }
 
@@ -230,8 +195,8 @@ export default {
         return responseJson({ error: "Invalid wallet address." }, 400, request);
       }
 
-      const entry = await verifyBnbIntent(intent, env);
-      if (!entry) return responseJson({ error: "Payment intent is invalid or expired." }, 400, request);
+      const entry = verifyBnbIntent(intent);
+      if (!entry) return responseJson({ error: "Payment session is invalid or expired." }, 400, request);
 
       try {
         const tx = await bscRpc("eth_getTransactionByHash", [txHash]);
