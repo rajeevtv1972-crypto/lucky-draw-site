@@ -1,0 +1,8 @@
+{
+  "$schema": "https://openapi.vercel.sh/wrangler.json",
+  "name": "lucky-draw-site",
+  "compatibility_date": "2026-09-17",
+  "assets": {
+    "directory": "."
+  }
+}
