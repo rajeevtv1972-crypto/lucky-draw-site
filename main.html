@@ -3,13 +3,13 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="description" content="Lucky Draw — enter for your chance to win.">
+  <meta name="description" content="Lucky Draw — pay the entry fee and enter for your chance to win.">
   <title>Lucky Draw</title>
+  <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
   <style>
     :root {
       --bg: #080b16;
       --card: rgba(18, 23, 42, 0.92);
-      --card-2: rgba(28, 34, 58, 0.85);
       --text: #f7f8ff;
       --muted: #aeb6d0;
       --accent: #8b5cf6;
@@ -19,9 +19,7 @@
       --border: rgba(255,255,255,.10);
       --shadow: 0 28px 80px rgba(0,0,0,.35);
     }
-
     * { box-sizing: border-box; }
-
     body {
       margin: 0;
       min-height: 100vh;
@@ -33,297 +31,73 @@
         linear-gradient(145deg, #060812, #10152a 55%, #080b16);
       overflow-x: hidden;
     }
-
-    .orb {
-      position: fixed;
-      width: 180px;
-      height: 180px;
-      border-radius: 50%;
-      filter: blur(80px);
-      opacity: .35;
-      pointer-events: none;
-      z-index: 0;
-    }
+    .orb { position: fixed; width: 180px; height: 180px; border-radius: 50%; filter: blur(80px); opacity: .35; pointer-events: none; z-index: 0; }
     .orb.one { top: 15%; left: -70px; background: #7c3aed; }
     .orb.two { right: -60px; bottom: 10%; background: #db2777; }
-
-    .wrap {
-      position: relative;
-      z-index: 1;
-      width: min(1100px, calc(100% - 32px));
-      margin: 0 auto;
-      padding: 28px 0 50px;
-    }
-
-    header {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 16px;
-      margin-bottom: 26px;
-    }
-
-    .brand {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-      font-weight: 800;
-      letter-spacing: .3px;
-    }
-
-    .logo {
-      width: 42px;
-      height: 42px;
-      border-radius: 14px;
-      display: grid;
-      place-items: center;
-      background: linear-gradient(135deg, var(--accent), var(--accent-2));
-      box-shadow: 0 12px 28px rgba(139,92,246,.28);
-      font-size: 22px;
-    }
-
-    .status {
-      padding: 8px 12px;
-      border: 1px solid var(--border);
-      border-radius: 999px;
-      color: #d8def3;
-      font-size: 13px;
-      background: rgba(255,255,255,.04);
-    }
-
-    .hero {
-      display: grid;
-      grid-template-columns: 1.18fr .82fr;
-      gap: 22px;
-    }
-
-    .card {
-      border: 1px solid var(--border);
-      background: var(--card);
-      border-radius: 28px;
-      box-shadow: var(--shadow);
-      backdrop-filter: blur(14px);
-    }
-
+    .wrap { position: relative; z-index: 1; width: min(1100px, calc(100% - 32px)); margin: 0 auto; padding: 28px 0 50px; }
+    header { display: flex; align-items: center; justify-content: space-between; gap: 16px; margin-bottom: 26px; }
+    .brand { display: flex; align-items: center; gap: 12px; font-weight: 800; letter-spacing: .3px; }
+    .logo { width: 42px; height: 42px; border-radius: 14px; display: grid; place-items: center; background: linear-gradient(135deg, var(--accent), var(--accent-2)); box-shadow: 0 12px 28px rgba(139,92,246,.28); font-size: 22px; }
+    .status { padding: 8px 12px; border: 1px solid var(--border); border-radius: 999px; color: #d8def3; font-size: 13px; background: rgba(255,255,255,.04); }
+    .hero { display: grid; grid-template-columns: 1.18fr .82fr; gap: 22px; }
+    .card { border: 1px solid var(--border); background: var(--card); border-radius: 28px; box-shadow: var(--shadow); backdrop-filter: blur(14px); }
     .hero-main { padding: 42px; }
     .form-card { padding: 30px; }
-
-    .eyebrow {
-      display: inline-flex;
-      padding: 7px 11px;
-      border-radius: 999px;
-      background: rgba(139,92,246,.14);
-      color: #cfc0ff;
-      font-size: 12px;
-      font-weight: 700;
-      text-transform: uppercase;
-      letter-spacing: 1px;
-    }
-
-    h1 {
-      margin: 18px 0 10px;
-      font-size: clamp(42px, 7vw, 76px);
-      line-height: .95;
-      letter-spacing: -3px;
-    }
-
-    .gradient-text {
-      background: linear-gradient(100deg, #fff, #d8cbff 45%, #ffb8df);
-      -webkit-background-clip: text;
-      background-clip: text;
-      color: transparent;
-    }
-
-    .subtitle {
-      max-width: 620px;
-      margin: 0;
-      color: var(--muted);
-      font-size: 17px;
-      line-height: 1.6;
-    }
-
-    .prize {
-      margin: 28px 0;
-      padding: 22px;
-      border-radius: 22px;
-      background: linear-gradient(135deg, rgba(139,92,246,.16), rgba(236,72,153,.10));
-      border: 1px solid rgba(255,255,255,.08);
-    }
-
+    .eyebrow { display: inline-flex; padding: 7px 11px; border-radius: 999px; background: rgba(139,92,246,.14); color: #cfc0ff; font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; }
+    h1 { margin: 18px 0 10px; font-size: clamp(42px, 7vw, 76px); line-height: .95; letter-spacing: -3px; }
+    .gradient-text { background: linear-gradient(100deg, #fff, #d8cbff 45%, #ffb8df); -webkit-background-clip: text; background-clip: text; color: transparent; }
+    .subtitle { max-width: 620px; margin: 0; color: var(--muted); font-size: 17px; line-height: 1.6; }
+    .prize { margin: 28px 0; padding: 22px; border-radius: 22px; background: linear-gradient(135deg, rgba(139,92,246,.16), rgba(236,72,153,.10)); border: 1px solid rgba(255,255,255,.08); }
     .prize small { color: var(--muted); }
     .prize strong { display: block; margin-top: 6px; font-size: 30px; }
-
-    .timer-label {
-      color: var(--muted);
-      font-size: 13px;
-      margin-bottom: 10px;
-      font-weight: 600;
-    }
-
-    .timer {
-      display: grid;
-      grid-template-columns: repeat(4, 1fr);
-      gap: 10px;
-    }
-
-    .time-box {
-      background: rgba(255,255,255,.055);
-      border: 1px solid var(--border);
-      border-radius: 16px;
-      text-align: center;
-      padding: 15px 8px;
-    }
-
+    .price-pill { display: inline-block; margin-top: 10px; padding: 7px 10px; border-radius: 999px; background: rgba(255,255,255,.07); color: #eee; font-weight: 700; font-size: 13px; }
+    .timer-label { color: var(--muted); font-size: 13px; margin-bottom: 10px; font-weight: 600; }
+    .timer { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; }
+    .time-box { background: rgba(255,255,255,.055); border: 1px solid var(--border); border-radius: 16px; text-align: center; padding: 15px 8px; }
     .time-box b { display: block; font-size: 26px; }
     .time-box span { font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: .7px; }
-
-    .form-title {
-      margin: 0 0 6px;
-      font-size: 25px;
-    }
-
-    .form-subtitle {
-      margin: 0 0 22px;
-      color: var(--muted);
-      font-size: 14px;
-      line-height: 1.55;
-    }
-
-    label {
-      display: block;
-      margin: 15px 0 8px;
-      color: #dbe1f5;
-      font-size: 13px;
-      font-weight: 650;
-    }
-
-    input {
-      width: 100%;
-      border: 1px solid var(--border);
-      border-radius: 14px;
-      padding: 14px 15px;
-      color: var(--text);
-      background: rgba(255,255,255,.045);
-      outline: none;
-      transition: .2s ease;
-      font-size: 15px;
-    }
-
-    input:focus {
-      border-color: rgba(167,139,250,.8);
-      box-shadow: 0 0 0 4px rgba(139,92,246,.12);
-    }
-
-    .terms {
-      display: flex;
-      gap: 9px;
-      align-items: flex-start;
-      color: var(--muted);
-      font-size: 12px;
-      line-height: 1.45;
-      margin: 16px 0;
-    }
-
-    .terms input {
-      width: auto;
-      margin-top: 2px;
-      accent-color: var(--accent);
-    }
-
-    button {
-      width: 100%;
-      border: 0;
-      border-radius: 15px;
-      padding: 15px 18px;
-      color: white;
-      background: linear-gradient(135deg, var(--accent), var(--accent-2));
-      font-size: 15px;
-      font-weight: 800;
-      cursor: pointer;
-      box-shadow: 0 14px 30px rgba(139,92,246,.23);
-      transition: transform .15s ease, opacity .15s ease;
-    }
-
+    .form-title { margin: 0 0 6px; font-size: 25px; }
+    .form-subtitle { margin: 0 0 22px; color: var(--muted); font-size: 14px; line-height: 1.55; }
+    label { display: block; margin: 15px 0 8px; color: #dbe1f5; font-size: 13px; font-weight: 650; }
+    input { width: 100%; border: 1px solid var(--border); border-radius: 14px; padding: 14px 15px; color: var(--text); background: rgba(255,255,255,.045); outline: none; transition: .2s ease; font-size: 15px; }
+    input:focus { border-color: rgba(167,139,250,.8); box-shadow: 0 0 0 4px rgba(139,92,246,.12); }
+    .terms { display: flex; gap: 9px; align-items: flex-start; color: var(--muted); font-size: 12px; line-height: 1.45; margin: 16px 0; font-weight: 400; }
+    .terms input { width: auto; margin-top: 2px; accent-color: var(--accent); }
+    button { width: 100%; border: 0; border-radius: 15px; padding: 15px 18px; color: white; background: linear-gradient(135deg, var(--accent), var(--accent-2)); font-size: 15px; font-weight: 800; cursor: pointer; box-shadow: 0 14px 30px rgba(139,92,246,.23); transition: transform .15s ease, opacity .15s ease; }
     button:hover { transform: translateY(-1px); }
     button:disabled { opacity: .6; cursor: not-allowed; transform: none; }
-
-    .message {
-      min-height: 22px;
-      margin-top: 14px;
-      font-size: 13px;
-      color: var(--muted);
-    }
+    .message { min-height: 22px; margin-top: 14px; font-size: 13px; color: var(--muted); }
     .message.success { color: var(--success); }
     .message.error { color: var(--danger); }
-
-    .info-grid {
-      display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap: 14px;
-      margin-top: 22px;
-    }
-
-    .info {
-      padding: 20px;
-      border: 1px solid var(--border);
-      background: rgba(255,255,255,.035);
-      border-radius: 20px;
-    }
-
+    .secure-note { margin-top: 14px; padding: 11px 12px; border-radius: 14px; background: rgba(52,211,153,.07); border: 1px solid rgba(52,211,153,.14); color: #bff5de; font-size: 12px; line-height: 1.45; }
+    .info-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; margin-top: 22px; }
+    .info { padding: 20px; border: 1px solid var(--border); background: rgba(255,255,255,.035); border-radius: 20px; }
     .info b { display: block; margin-bottom: 7px; }
     .info span { color: var(--muted); font-size: 13px; line-height: 1.45; }
-
-    footer {
-      text-align: center;
-      color: #7f88a3;
-      padding-top: 24px;
-      font-size: 12px;
-    }
-
-    @media (max-width: 820px) {
-      .hero { grid-template-columns: 1fr; }
-      .hero-main { padding: 30px; }
-      .info-grid { grid-template-columns: 1fr; }
-    }
-
-    @media (max-width: 480px) {
-      .wrap { width: min(100% - 20px, 1100px); padding-top: 16px; }
-      header { margin-bottom: 18px; }
-      .status { display: none; }
-      .hero-main, .form-card { padding: 22px; }
-      h1 { letter-spacing: -2px; }
-      .timer { gap: 7px; }
-      .time-box { padding: 12px 5px; }
-      .time-box b { font-size: 21px; }
-    }
+    footer { text-align: center; color: #7f88a3; padding-top: 24px; font-size: 12px; }
+    @media (max-width: 820px) { .hero { grid-template-columns: 1fr; } .hero-main { padding: 30px; } .info-grid { grid-template-columns: 1fr; } }
+    @media (max-width: 480px) { .wrap { width: min(100% - 20px, 1100px); padding-top: 16px; } header { margin-bottom: 18px; } .status { display: none; } .hero-main, .form-card { padding: 22px; } h1 { letter-spacing: -2px; } .timer { gap: 7px; } .time-box { padding: 12px 5px; } .time-box b { font-size: 21px; } }
   </style>
 </head>
 <body>
   <div class="orb one"></div>
   <div class="orb two"></div>
-
   <main class="wrap">
     <header>
-      <div class="brand">
-        <div class="logo">🎉</div>
-        <div>Lucky Draw</div>
-      </div>
-      <div class="status">● Entries Open</div>
+      <div class="brand"><div class="logo">🎉</div><div>Lucky Draw</div></div>
+      <div class="status" id="status">● Checking payment setup</div>
     </header>
 
     <section class="hero">
       <div class="card hero-main">
         <span class="eyebrow">Limited-time giveaway</span>
         <h1><span class="gradient-text">Your luck.</span><br>One entry.</h1>
-        <p class="subtitle">
-          Enter the draw before the timer reaches zero. Keep your details accurate so the winner can be contacted after the draw.
-        </p>
-
+        <p class="subtitle">Pay the entry fee securely with Razorpay. After a successful payment, your entry details are verified on the server and emailed privately.</p>
         <div class="prize">
           <small>Featured prize</small>
           <strong>🏆 Lucky Draw Prize</strong>
+          <span class="price-pill" id="fee">Entry fee: Loading…</span>
         </div>
-
         <div class="timer-label">Draw closes in</div>
         <div class="timer" aria-label="Countdown timer">
           <div class="time-box"><b id="days">07</b><span>Days</span></div>
@@ -335,154 +109,190 @@
 
       <div class="card form-card">
         <h2 class="form-title">Enter the draw</h2>
-        <p class="form-subtitle">Submit your details once. Your entry should be stored by your private backend when an API endpoint is configured.</p>
-
+        <p class="form-subtitle">Your details are sent to the server only when you start the payment process. No payment secret is exposed in this page.</p>
         <form id="entryForm">
           <label for="name">Full name</label>
           <input id="name" name="name" autocomplete="name" required maxlength="100" placeholder="Enter your name">
-
           <label for="email">Email address</label>
           <input id="email" name="email" type="email" autocomplete="email" required maxlength="160" placeholder="you@example.com">
-
           <label for="phone">Phone number</label>
           <input id="phone" name="phone" type="tel" autocomplete="tel" maxlength="25" placeholder="Optional">
-
-          <label class="terms">
-            <input id="agree" type="checkbox" required>
-            <span>I confirm that the information above is correct and I agree to the draw rules.</span>
-          </label>
-
-          <button id="submitBtn" type="submit">🎟️ Submit Entry</button>
+          <label class="terms"><input id="agree" type="checkbox" required><span>I confirm that the information above is correct and I agree to the draw rules.</span></label>
+          <button id="submitBtn" type="submit" disabled>💳 Loading payment setup…</button>
           <div id="message" class="message" role="status" aria-live="polite"></div>
+          <div class="secure-note">🔒 Payment is verified server-side before the entry is accepted. Your Razorpay secret stays in Cloudflare as a secret.</div>
         </form>
       </div>
     </section>
 
     <section class="info-grid" aria-label="Draw information">
-      <div class="info">
-        <b>🔒 Private entries</b>
-        <span>Connect the form to your server/API so submitted entries stay out of the public page.</span>
-      </div>
-      <div class="info">
-        <b>⏱️ 7-day window</b>
-        <span>The countdown starts on the visitor's first visit unless a server-defined closing time is supplied.</span>
-      </div>
-      <div class="info">
-        <b>📩 Winner contact</b>
-        <span>Use the email or phone details from the stored entry to contact the selected winner.</span>
-      </div>
+      <div class="info"><b>💳 Secure payment</b><span>Razorpay creates the order on the server and the payment signature is verified before entry confirmation.</span></div>
+      <div class="info"><b>📩 Private email record</b><span>After payment is captured, the entry details and payment reference are sent to your configured admin email.</span></div>
+      <div class="info"><b>🧾 Payment backup</b><span>The entry details are also attached to the Razorpay order notes, giving you a second server-side record.</span></div>
     </section>
 
     <footer>© <span id="year"></span> Lucky Draw. All rights reserved.</footer>
   </main>
 
   <script>
-    // Set this to your Cloudflare Worker / Pages Function endpoint when ready.
-    // Example: const API_ENDPOINT = "https://your-worker.example.workers.dev/api/entries";
-    const API_ENDPOINT = window.LUCKY_DRAW_API_ENDPOINT || "";
-
+    const $ = (id) => document.getElementById(id);
     const STORAGE_KEY = "lucky_draw_end_time_v1";
-    const now = Date.now();
     let endTime = Number(localStorage.getItem(STORAGE_KEY));
-
+    const now = Date.now();
     if (!Number.isFinite(endTime) || endTime <= now) {
-      endTime = now + (7 * 24 * 60 * 60 * 1000);
+      endTime = now + 7 * 24 * 60 * 60 * 1000;
       localStorage.setItem(STORAGE_KEY, String(endTime));
     }
 
-    const $ = (id) => document.getElementById(id);
+    let paymentConfig = null;
 
-    function pad(value) {
-      return String(Math.max(0, value)).padStart(2, "0");
+    function pad(value) { return String(Math.max(0, value)).padStart(2, "0"); }
+    function showMessage(text, type = "") {
+      $("message").textContent = text;
+      $("message").className = "message" + (type ? " " + type : "");
     }
-
     function updateTimer() {
       const remaining = Math.max(0, endTime - Date.now());
       const totalSeconds = Math.floor(remaining / 1000);
-      const days = Math.floor(totalSeconds / 86400);
-      const hours = Math.floor((totalSeconds % 86400) / 3600);
-      const minutes = Math.floor((totalSeconds % 3600) / 60);
-      const seconds = totalSeconds % 60;
-
-      $("days").textContent = pad(days);
-      $("hours").textContent = pad(hours);
-      $("minutes").textContent = pad(minutes);
-      $("seconds").textContent = pad(seconds);
-
+      $("days").textContent = pad(Math.floor(totalSeconds / 86400));
+      $("hours").textContent = pad(Math.floor((totalSeconds % 86400) / 3600));
+      $("minutes").textContent = pad(Math.floor((totalSeconds % 3600) / 60));
+      $("seconds").textContent = pad(totalSeconds % 60);
       if (remaining <= 0) {
+        $("status").textContent = "● Draw Closed";
         $("submitBtn").disabled = true;
         $("submitBtn").textContent = "Draw Closed";
-        $("message").textContent = "The entry window has closed.";
-        $("message").className = "message error";
       }
     }
-
     setInterval(updateTimer, 1000);
     updateTimer();
     $("year").textContent = new Date().getFullYear();
 
-    function showMessage(text, type = "") {
-      const message = $("message");
-      message.textContent = text;
-      message.className = "message" + (type ? " " + type : "");
+    async function loadConfig() {
+      try {
+        const response = await fetch("/api/config", { cache: "no-store" });
+        const data = await response.json();
+        if (!response.ok || !data.configured) throw new Error(data.error || "Payment setup is incomplete.");
+        paymentConfig = data;
+        $("fee").textContent = `Entry fee: ₹${(data.amount / 100).toFixed(2)}`;
+        $("submitBtn").disabled = false;
+        $("submitBtn").textContent = `💳 Pay ₹${(data.amount / 100).toFixed(2)} & Enter`;
+        $("status").textContent = "● Entries Open";
+      } catch (error) {
+        console.error(error);
+        $("fee").textContent = "Entry fee: Not configured";
+        $("submitBtn").disabled = true;
+        $("submitBtn").textContent = "Payment Setup Required";
+        $("status").textContent = "● Payment unavailable";
+        showMessage("Payment is not configured yet. Add the Cloudflare variables/secrets shown in the setup guide.", "error");
+      }
+    }
+
+    async function createOrder(entry) {
+      const response = await fetch("/api/create-order", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(entry)
+      });
+      const data = await response.json().catch(() => ({}));
+      if (!response.ok) throw new Error(data.error || "Could not create payment order.");
+      return data;
+    }
+
+    async function verifyPayment(responseData) {
+      const response = await fetch("/api/verify-payment", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(responseData)
+      });
+      const data = await response.json().catch(() => ({}));
+      if (!response.ok || !data.success) throw new Error(data.error || "Payment verification failed.");
+      return data;
     }
 
     $("entryForm").addEventListener("submit", async (event) => {
       event.preventDefault();
+      if (!paymentConfig) return;
+      if (Date.now() >= endTime) { showMessage("The draw is closed.", "error"); return; }
 
-      if (Date.now() >= endTime) {
-        showMessage("The draw is closed.", "error");
-        return;
-      }
-
-      const submitBtn = $("submitBtn");
-      const formData = new FormData(event.currentTarget);
+      const button = $("submitBtn");
+      const form = event.currentTarget;
+      const formData = new FormData(form);
       const entry = {
         name: String(formData.get("name") || "").trim(),
         email: String(formData.get("email") || "").trim(),
-        phone: String(formData.get("phone") || "").trim(),
-        submittedAt: new Date().toISOString()
+        phone: String(formData.get("phone") || "").trim()
       };
+      if (!entry.name || !entry.email) { showMessage("Please enter your name and email.", "error"); return; }
 
-      if (!entry.name || !entry.email) {
-        showMessage("Please enter your name and email.", "error");
-        return;
-      }
-
-      submitBtn.disabled = true;
-      submitBtn.textContent = "Submitting…";
+      button.disabled = true;
+      button.textContent = "Creating secure order…";
       showMessage("");
 
       try {
-        if (API_ENDPOINT) {
-          const response = await fetch(API_ENDPOINT, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(entry)
-          });
+        const order = await createOrder(entry);
+        const options = {
+          key: paymentConfig.keyId,
+          amount: order.amount,
+          currency: order.currency,
+          name: "Lucky Draw",
+          description: "Lucky Draw Entry",
+          order_id: order.id,
+          prefill: { name: entry.name, email: entry.email, contact: entry.phone || undefined },
+          notes: { purpose: "Lucky Draw Entry" },
+          theme: { color: "#8b5cf6" },
+          modal: {
+            ondismiss: () => {
+              if (Date.now() < endTime) {
+                button.disabled = false;
+                button.textContent = `💳 Pay ₹${(paymentConfig.amount / 100).toFixed(2)} & Enter`;
+                showMessage("Payment window closed. Your entry was not confirmed.", "error");
+              }
+            }
+          },
+          handler: async (paymentResponse) => {
+            try {
+              button.disabled = true;
+              button.textContent = "Verifying payment…";
+              const result = await verifyPayment(paymentResponse);
+              showMessage(
+                result.emailSent
+                  ? `Payment confirmed and entry recorded successfully. Payment ID: ${result.paymentId} 🎉`
+                  : `Payment confirmed and entry recorded. Email delivery needs attention. Payment ID: ${result.paymentId}`,
+                result.emailSent ? "success" : "error"
+              );
+              form.reset();
+            } catch (error) {
+              console.error(error);
+              showMessage("Payment may have completed, but server verification failed. Please keep your payment reference and contact the organizer.", "error");
+            } finally {
+              if (Date.now() < endTime) {
+                button.disabled = false;
+                button.textContent = `💳 Pay ₹${(paymentConfig.amount / 100).toFixed(2)} & Enter`;
+              }
+            }
+          }
+        };
 
-          if (!response.ok) throw new Error("Request failed");
-          showMessage("Entry submitted successfully. Good luck! 🎉", "success");
-        } else {
-          // Demo fallback only. For a real public draw, configure API_ENDPOINT
-          // so entries are stored centrally in your private backend/database.
-          const localEntries = JSON.parse(localStorage.getItem("lucky_draw_demo_entries") || "[]");
-          localEntries.push(entry);
-          localStorage.setItem("lucky_draw_demo_entries", JSON.stringify(localEntries));
-          showMessage("Demo entry saved on this device. Connect your private API before launch.", "success");
-        }
-
-        event.currentTarget.reset();
+        const razorpay = new Razorpay(options);
+        razorpay.on("payment.failed", (failure) => {
+          console.error("Razorpay payment failed", failure.error);
+          showMessage("Payment failed or was cancelled. No entry was confirmed.", "error");
+          if (Date.now() < endTime) {
+            button.disabled = false;
+            button.textContent = `💳 Pay ₹${(paymentConfig.amount / 100).toFixed(2)} & Enter`;
+          }
+        });
+        razorpay.open();
       } catch (error) {
         console.error(error);
-        showMessage("We couldn't submit your entry. Please try again.", "error");
-      } finally {
-        if (Date.now() < endTime) {
-          submitBtn.disabled = false;
-          submitBtn.textContent = "🎟️ Submit Entry";
-        }
+        showMessage(error.message || "Unable to start payment.", "error");
+        button.disabled = false;
+        button.textContent = `💳 Pay ₹${(paymentConfig.amount / 100).toFixed(2)} & Enter`;
       }
     });
+
+    loadConfig();
   </script>
 </body>
 </html>
