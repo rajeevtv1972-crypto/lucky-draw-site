@@ -1,0 +1,5 @@
+User-agent: *
+Allow: /
+Disallow: /api/
+
+Sitemap: https://lucky-draw-site.rajeev-t-v1972.workers.dev/sitemap.xml
