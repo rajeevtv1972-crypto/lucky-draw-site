@@ -1,0 +1,7 @@
+name = "lucky-draw-site"
+main = "worker.js"
+compatibility_date = "2026-09-18"
+
+[assets]
+directory = "."
+binding = "ASSETS"
