@@ -244,6 +244,30 @@ export default {
       }
     }
 
-    return env.ASSETS.fetch(request);
+    if (url.pathname === "/" || url.pathname === "/index.html") {
+      const assetRequest = new Request(new URL("/main.html", request.url), request);
+      const response = await env.ASSETS.fetch(assetRequest);
+      const headers = new Headers(response.headers);
+      headers.set("x-content-type-options", "nosniff");
+      headers.set("referrer-policy", "strict-origin-when-cross-origin");
+      headers.set("x-frame-options", "DENY");
+      headers.set("permissions-policy", "camera=(), microphone=(), geolocation=()");
+      headers.set("cache-control", "public, max-age=300, s-maxage=86400, stale-while-revalidate=604800");
+      return new Response(response.body, { status: response.status, statusText: response.statusText, headers });
+    }
+
+    const response = await env.ASSETS.fetch(request);
+    const headers = new Headers(response.headers);
+    headers.set("x-content-type-options", "nosniff");
+    headers.set("referrer-policy", "strict-origin-when-cross-origin");
+    headers.set("x-frame-options", "DENY");
+    headers.set("permissions-policy", "camera=(), microphone=(), geolocation=()");
+    if (!url.pathname.startsWith("/api/")) {
+      const isHtml = (headers.get("content-type") || "").includes("text/html");
+      headers.set("cache-control", isHtml
+        ? "public, max-age=300, s-maxage=86400, stale-while-revalidate=604800"
+        : "public, max-age=3600, s-maxage=86400, stale-while-revalidate=604800");
+    }
+    return new Response(response.body, { status: response.status, statusText: response.statusText, headers });
   }
 };
