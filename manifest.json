@@ -1,0 +1,15 @@
+{
+  "name": "Lucky Draw",
+  "short_name": "Lucky Draw",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#070914",
+  "theme_color": "#090b16",
+  "description": "Lucky Draw with a 0.1 BNB prize and on-chain BNB Smart Chain payment verification.",
+  "icons": [{
+    "src": "/favicon.svg",
+    "sizes": "any",
+    "type": "image/svg+xml",
+    "purpose": "any maskable"
+  }]
+}
